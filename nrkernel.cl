@@ -91,9 +91,6 @@ inline float get_lightning(float4 io, float4 np, float4 p, int lidx,
 		float tmp;int idx, type;
 		tmp = get_insection(tp, to, pc, sc, po, pn, so, sr, &idx, &type);
 		get_reflection(np, -tp, to, io, &rto, &rtp);
-		//if(tty == 1){
-		//	printf("%d %d %f\n",idx,type,tmp);
-		//}
 		if(idx==-1||tmp*tmp>tmpl-eps||idx==i){
 			float t1 = dot(np, tp);
 			if(t1*t3<1e-10){

@@ -94,13 +94,19 @@ void clInit() {
 	printf("platform: %d\n", platforms);
 	char vendor[100];
 	error = clGetPlatformInfo(platform[1], CL_PLATFORM_VENDOR, sizeof(vendor), vendor, NULL);
-	printf("platform[1] vendor %s\n", vendor);
-	error = clGetDeviceIDs(platform[1], CL_DEVICE_TYPE_CPU, 1, &device, NULL); assert(!error);
+	int i;
+	for(i=0; i<platform; i++){
+		error = clGetPlatformInfo(platform[i], CL_PLATFORM_VENDOR, sizeof(vendor), vendor, NULL);
+		printf("platform[%d] vendor %s\n", i, vendor);
+		error = clGetDeviceIDs(platform[i], CL_DEVICE_TYPE_CPU, 1, &device, NULL);
+		if(!error)break;
+	}
+	assert(i<platform);
 
 	cl_context_properties props[] = {
 		CL_GL_CONTEXT_KHR,   (cl_context_properties) glXGetCurrentContext(),
 		CL_GLX_DISPLAY_KHR,      (cl_context_properties) glXGetCurrentDisplay(),
-		CL_CONTEXT_PLATFORM, (cl_context_properties) platform[0], 
+		CL_CONTEXT_PLATFORM, (cl_context_properties) platform[i], 
 		0
 	};
 
@@ -194,8 +200,8 @@ void appInit(int w, int h) {
 	tex_cl = clCreateImage2D(context, CL_MEM_WRITE_ONLY, &imf, 480, 480, 0, NULL, &error);
 	assert(!error);
 
-	kernel = loadAndBuildKernel("nrkernel.cl", "work");
-	motion_kernel = loadAndBuildKernel("nrkernel.cl", "motion");
+	kernel = loadAndBuildKernel("nrn.cl", "work");
+	motion_kernel = loadAndBuildKernel("nrn.cl", "motion");
 	cl_mem bpn, bpo, bso, bsr, blso, bls, boc, bore;
 	bpn = clCreateBuffer(context, CL_MEM_READ_ONLY|CL_MEM_COPY_HOST_PTR , sizeof(pn), pn, &error);assert(!error);
 	bpo = clCreateBuffer(context, CL_MEM_READ_ONLY|CL_MEM_COPY_HOST_PTR , sizeof(po), po, &error); assert(!error);

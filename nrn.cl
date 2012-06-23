@@ -81,20 +81,17 @@ float get_lightning(float4 io, float4 np, float4 p, float4 o, int lc, __constant
 	for(i=0;i<lc;i++){
 		total_l += ls[i];
 		float4 tp = lso[i]-io;
-		float4 to = io;
+		float4 to = io, rto, rtp;
 		float tmpl = dot(tp, tp);
 		tp = normalize(tp);
 		float tmp;int idx, type;
 		tmp = get_insection(tp, to, pc, sc, po, pn, so, sr, &idx, &type);
 		get_reflection(np, -tp, to, io, &rto, &rtp);
-		//if(tty == 1){
-		//	printf("%d %d %f\n",idx,type,tmp);
-		//}
 		if(idx==-1||tmp*tmp>tmpl-eps){
 			float t1 = dot(np, tp);
 			if(t1*t3<1e-10){
-				//printf("%f\n", sqrt(dot(np,np)));
-				light+=ls[i]*fabs(dot(tp,np)/sqrt(dot(tp,tp))/sqrt(dot(np,np)));
+				light+=fabs(t1)*0.8*(1+max(0.0f, dot(rtp, -p)));
+//				printf("%f %f\n",dot(rtp,-p),light);
 			}
 		}
 	}

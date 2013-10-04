@@ -72,7 +72,7 @@ void get_reflection(float4 np, float4 p, float4 o,
 	*rp = p-2*dot(p,np)*np;
 	*ro = io;
 }
-float get_lightning(float4 io, float4 np, float4 p, float4 o, int lc, __constant float *ls, __constant float4 *lso,
+float get_lightning(float4 io, float4 np, float4 p, int lc, __constant float *ls, __constant float4 *lso,
 		int pc, int sc,
 		__constant float4 *po, __constant float4 *pn,
 		__constant float4 *so, __constant float *sr, int tty){
@@ -107,7 +107,7 @@ float4 ray_trace(float4 p, float4 o, int pc, int sc, int lc,
 	float factor = 1;
 	float4 trp = p;
 	float4 tro = o;
-	float4 color = 0;
+	float4 color = 0, fc=1;
 	int depth = 0;
 	while(1){
 		if(depth>RTDEPTH)break;
@@ -118,17 +118,18 @@ float4 ray_trace(float4 p, float4 o, int pc, int sc, int lc,
 		float4 io = tro+trp*t;
 		float4 np=get_normal(idx, type,  io, so, pn);
 		int idx2=pc*type+idx;
-		float light = get_lightning(io, np, trp, tro, lc, ls, lso, pc, sc, po, pn, so, sr, type);
+		float light = get_lightning(io, np, trp, lc, ls, lso, pc, sc, po, pn, so, sr, type);
 		float f2=light*(1-ore[idx2])*factor;
 		float4 toc;
 		//if(type==0)
 		//	toc=oc[idx2]*f2*(sin(io.x+io.y+io.z)>0);
 		//else
-			toc=oc[idx2]*f2;
+			toc=oc[idx2]*f2*fc;
 		color=color+toc;
 		//Deal with reflections
 		get_reflection(np, trp, tro, io, &tro, &trp);
 		factor *= ore[idx2];
+		fc *= oc[idx2];
 		depth++;
 	}
 	return color;
@@ -153,10 +154,8 @@ __kernel void work(uint pc, uint sc, uint lc,
 	clr = ray_trace(p, o, pc, sc, lc, po, pn, so, sr, ore, oc, ls, lso);
 	write_imagef(out, cor, clr);
 }
+#define SPD 1.2f
 __kernel void motion(__global float4 *so, float delta_time, float time){
-	so[0].x = so[0].x - sin(time) + sin(time+delta_time);
-	so[0].z = so[0].z - cos(time) + cos(time+delta_time);
-}
-__kernel void photon_generate(__global float4 *lsc, __global float4 *lso, __global float4 *lsr, __global float4 *photon, __global int *gridc){
-	int idx=get_global_id(0);
+	so[0].x = so[0].x - sin(SPD*time) + sin(SPD*(time+delta_time));
+	so[0].z = so[0].z - cos(SPD*time) + cos(SPD*(time+delta_time));
 }
